@@ -5,6 +5,7 @@
 <configuration>
 	<typeAliases>
 		<typeAlias type="spring.mybatis0119_1.MemberDTO" alias="memberdto" />
+		<typeAlias type="board.spring.mybatis0120_1.BoardDTO" alias="boarddto" />
 	</typeAliases>
 
 </configuration>

@@ -1,6 +1,9 @@
 package spring.mybatis0119_1;
 
+import java.io.File;
+import java.io.IOException;
 import java.util.List;
+import java.util.UUID;
 
 import jakarta.servlet.http.HttpSession;
 
@@ -10,6 +13,8 @@ import org.springframework.stereotype.Controller;
 import org.springframework.web.bind.annotation.GetMapping;
 import org.springframework.web.bind.annotation.PostMapping;
 import org.springframework.web.bind.annotation.RequestMapping;
+import org.springframework.web.bind.annotation.ResponseBody;
+import org.springframework.web.multipart.MultipartFile;
 import org.springframework.web.servlet.ModelAndView;
 
 import jakarta.servlet.http.HttpSession;
@@ -17,7 +22,7 @@ import jakarta.servlet.http.HttpSession;
 @Controller
 public class MemberController {
 	@Autowired
-	@Qualifier("service")
+	@Qualifier("memberservice")
 	MemberService service;
 	
 	// 서버 시작 화면
@@ -45,7 +50,7 @@ public class MemberController {
 				view = "mybatis/start";
 			}
 			else {
-				view = "mybatis/login";
+				view = "mybatis/loginform";
 			}
 		}
 		return view;
@@ -66,35 +71,42 @@ public class MemberController {
 	}
 	
 	@PostMapping("/memberinsert")
-	public ModelAndView memberinsert(MemberDTO dto){
-		//dto.setxxxx (xxx파라미터 자동저장)
-		
+	public ModelAndView  memberinsert(MemberDTO dto) throws IOException{
+		//dto.setxxxx(xxx파라미터자동저장)
 		//파일업로드 c:upload 저장처리
-		//dto image변수에 c:upload 저장파일명 세팅
+		// dto image변수에 c:upload 저장파일명 세팅
+		String savePath = "c:/upload/";
+		MultipartFile  imagefile = dto.getImagefile();
 		
-		//dto 객체 저장값(폼 사용자값) member테이블 저장
-		//indate(가입일) 입력 x 
-		//저장한 결과는 "정상회원가입처리"라는 멘트 처리
-		//mybatis/memberinsert2 뷰
+		//파일명1 추출
+		String filename1 = imagefile.getOriginalFilename();
+		//파일이름 . 확장자 분리
+		String beforeext1 = filename1.substring(0, filename1.lastIndexOf('.'));
+		String ext1 = filename1.substring(filename1.lastIndexOf('.'));
+		//	UUID.randomUUID()
+		String newfilename1 = beforeext1 +"(" + UUID.randomUUID().toString() +")" + ext1;
+		//파일내용1 추출해서 c:/upload/filename1 저장 
+		File serverfile1 = new File(savePath + newfilename1);
+		imagefile.transferTo(serverfile1);
+		
+		dto.setImage(newfilename1);
+		
 		MemberDTO db_dto = service.onemember(dto.getId());
 		String insertresult = "";
-		
 		if(db_dto == null) {
-			int row = service.insertmember(dto); //indate 없다
+			int row = service.insertmember(dto);//indate 없다
 			if(row == 1) {
-				insertresult="정상회원가입처리";
+				insertresult ="정상회원가입처리";
 			}
 			else {
-				insertresult="회원가입처리오류발생";
+				insertresult ="회원가입처리오류발생";
 			}
 		}
 		else {
 			insertresult = "이미 사용중인 아이디입니다.";
 		}
-		
-		
 		ModelAndView mv = new ModelAndView();
-		mv.addObject("insertresult", "정상회원가입처리");
+		mv.addObject("insertresult", insertresult);
 		mv.setViewName("mybatis/memberinsert2");
 		return mv;
 		
@@ -159,6 +171,7 @@ public class MemberController {
 	//2. service.deletemember(loginid)
 	//3. 2번결과 1이면 "회원탈퇴정상처리" 모델로(updateresult) 저장
 	//4. start.jsp 이동
+	@GetMapping("/memberdelete")
 	public ModelAndView memberdelete(HttpSession session) {
 		ModelAndView mv = new ModelAndView();
 		if(session.getAttribute("loginid") != null){
@@ -174,4 +187,26 @@ public class MemberController {
 		return mv;
 	}
 	
+	@ResponseBody
+	@GetMapping("/othermemberinform")
+	public MemberDTO othermemberinform(HttpSession session , String id){
+		MemberDTO dto = new MemberDTO();
+		String model = null;
+		if(session.getAttribute("loginid") == null) {
+			model =  "로그인이전입니다.";
+			dto.setId(model);
+		}
+		else {
+			String loginid = (String)session.getAttribute("loginid");
+			if(!loginid.equalsIgnoreCase("admin")) {
+				model = "회원정보 볼 권한 없습니다";
+				dto.setId(model);
+			}
+			else {
+				dto = service.onemember(id);
+			}
+		}
+
+		return dto;
+	}
 }

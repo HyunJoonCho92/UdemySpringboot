@@ -1,0 +1,31 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<!DOCTYPE mapper PUBLIC "-//mybatis.org//DTD Mapper 3.0//EN"
+  "http://mybatis.org/dtd/mybatis-3-mapper.dtd">
+
+<!-- 이거 반드시 설정해줘야함 -->
+<mapper namespace="board.spring.mybatis0120_1.BoardDAO">
+
+<!-- id 는 BoardDAO의 메소드명 -->
+<select id="getTotalBoard" resultType="int">
+	select count(*) from board
+</select>
+
+<select id="getBoardList" parameterType="int" resultType="boarddto">
+	<!-- 변수 limit를 전달하겠다. -->
+	select * from board order by writingtime desc limit #{limit}, 3
+</select>
+
+<select id="getOneBoard" parameterType="int" resultType="boarddto">
+	select * from board where seq=#{seq}
+</select>
+
+<update id="updateViewCount" parameterType="int">
+	update board set viewcount = viewcount+1 where seq=#{seq}
+</update>
+
+<insert id="insertBoard" parameterType="boarddto">
+	insert into board(title, contents, writer, viewcount,writingtime )
+	values(#{title}, #{contents}, #{writer}, 0, now())
+</insert>
+
+</mapper>

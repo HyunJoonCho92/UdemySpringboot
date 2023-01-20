@@ -5,7 +5,8 @@
 <head>
 <meta charset="UTF-8">
 <title>Insert title here</title>
-<script src="js/jquery-3.6.1.min.js"></script>
+<script src="<%=request.getContextPath()%>/resources/js/jquery-3.6.1.min.js"></script> 
+<!-- <script src="js/jquery-3.6.1.min.js"></script> -->
 <script>
 	$(document).ready(function(){
 		$("#form").on('submit', function(e){
@@ -33,5 +34,7 @@
 		<input type="submit" value="내정보수정">
 	</form>
 	<div id ="result"></div>
+
+
 </body>
 </html>
